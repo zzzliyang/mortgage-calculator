@@ -27,5 +27,6 @@ body {
 }
 
 .result-chart {
-  overflow: scroll;
+  overflow-x: scroll;
+  overflow-y: hidden;
 }

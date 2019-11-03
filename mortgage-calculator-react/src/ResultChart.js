@@ -1,14 +1,7 @@
 import React from "react";
-import {
-    Chart,
-    Geom,
-    Axis,
-    Tooltip,
-    Legend,
-} from "bizcharts";
-import { connect } from "react-redux";
+import {Axis, Chart, Geom, Legend, Tooltip,} from "bizcharts";
+import {connect} from "react-redux";
 import DataSet from "@antv/data-set";
-import {Row} from "antd";
 
 const mapStateToProps = state => state;
 
@@ -23,23 +16,71 @@ const scale = {
     },
 };
 
+function roundNumber(number) {
+    return Math.round(number * 100) / 100;
+}
+
 class ResultChart extends React.Component {
     render() {
         const ds = new DataSet();
         const dv = ds.createView().source(this.props.resultState.result);
+        const isMultiple = this.props.resultState.isMultiple;
+        const fields = isMultiple
+            ? ['interestPayment', 'principalRepayment', 'interestPayment2', 'principalRepayment2']
+            : ['interestPayment', 'principalRepayment'];
+        const legends = isMultiple
+            ? [
+                {value: 'interestPayment', marker: {symbol: 'square', fill: '#2b6cbb'}},
+                {value: 'principalRepayment', marker: {symbol: 'square', fill: '#41a2fc'}},
+                {value: 'totalRepayment', marker: {symbol: 'square', fill: '#fc0618'}},
+                {value: 'interestPayment2', marker: {symbol: 'square', fill: '#067500'}},
+                {value: 'principalRepayment2', marker: {symbol: 'square', fill: '#48fc05'}},
+                {value: 'totalRepayment2', marker: {symbol: 'square', fill: '#fcd500'}},
+            ]
+            :
+            [
+                {value: 'interestPayment', marker: {symbol: 'square', fill: '#2b6cbb'}},
+                {value: 'principalRepayment', marker: {symbol: 'square', fill: '#41a2fc'}},
+                {value: 'totalRepayment', marker: {symbol: 'square', fill: '#fc0618'}},
+            ];
         dv.transform({
             type: "fold",
-            fields: ['interestPayment', 'principalRepayment', 'interestPayment2', 'principalRepayment2'],
+            fields: fields,
             key: 'type',
             value: 'value',
         });
+        const totalInterest1 = this.props.resultState.totalInterest1;
+        const totalAmount1 = this.props.resultState.totalAmount1;
+        const totalPrincipal1 = totalAmount1 - totalInterest1;
+        const totalInterest2 = this.props.resultState.totalInterest2;
+        const totalAmount2 = this.props.resultState.totalAmount2;
+        const totalPrincipal2 = totalAmount2 - totalInterest2;
         return (
             <div>
-                <Chart height={400} scale={scale} width={50*this.props.resultState.result.length} data={dv}>
-                    <Legend />
-                    <Axis name="tenor" />
-                    <Axis name="value" position={'left'} />
-                    <Tooltip />
+                <Chart height={400} scale={scale} width={50 * this.props.resultState.result.length} data={dv}>
+                    <Legend
+                        custom
+                        items={ legends }
+                        position="bottom-left"
+                        offsetX={100}
+                        itemFormatter={val => {
+                            if (val === 'interestPayment')
+                                return "Package 1 - Interest Repayment - Total: " + roundNumber(totalInterest1);
+                            if (val === 'principalRepayment')
+                                return "Package 1 - Principal Repayment - Total: " + roundNumber(totalPrincipal1);
+                            if (val === 'totalRepayment')
+                                return "Package 1 - Total Repayment: " + roundNumber(totalAmount1);
+                            if (val === 'interestPayment2')
+                                return "Package 2 - Interest Repayment" + roundNumber(totalInterest2);
+                            if (val === 'principalRepayment2')
+                                return "Package 2 - Principal Repayment" + roundNumber(totalPrincipal2);
+                            if (val === 'totalRepayment2')
+                                return "Package 2 - Total Repayment: " + roundNumber(totalAmount2);
+                        }}
+                    />
+                    <Axis name="tenor"/>
+                    <Axis name="value" position={'left'}/>
+                    <Tooltip/>
                     <Geom
                         type="interval"
                         position="tenor*value"
@@ -61,7 +102,8 @@ class ResultChart extends React.Component {
                             type: 'stack',
                         }]}
                     />
-                    <Geom type="line" position="tenor*totalRepayment" color='red' opacity={0} size={3} />
+                    <Geom type="line" position="tenor*totalRepayment" color='#fc0618' opacity={0} size={0}/>
+                    <Geom type="line" position="tenor*totalRepayment2" color='#fcd500' opacity={0} size={0}/>
                 </Chart>
             </div>
         );

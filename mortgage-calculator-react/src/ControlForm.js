@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {connect} from "react-redux";
-import {setMultiple, setResult} from "./redux/actions";
+import { setMultiple, setResult, setTotal1, setTotal2 } from "./redux/actions";
 import {Button, Col, Divider, Form, InputNumber, Radio, Row, Select, Slider} from 'antd';
 import './App.css';
 
@@ -11,6 +11,8 @@ function roundNumber(number) {
 }
 
 const mapStateToProps = state => state;
+
+const randomScale = 0.0001;
 
 class ControlForm extends Component {
 
@@ -25,24 +27,45 @@ class ControlForm extends Component {
         floatingPkg2: 1
     };
 
+    monteCarlo = (rate, times) => {
+        const rates = [];
+        for (let i = 0; i < times; i++) {
+            const rand = Math.random();
+            rates.push(rate + randomScale * 2 * (rand - 0.5))
+        }
+    }
+
     simulateFloatingRate = (rateType, loanTenure, rate, pkg, simulation) => {
+        /* Packages
+        <Option value={1}>1M SIBOR(1.80217)+0.25%</Option>
+        <Option value={2}>3M SIBOR(1.83088)+0.2%</Option>
+        <Option value={3}>FHR8(0.95)+1.1%</Option>*/
+        /* Simulations
+        <Option value={1}>Random Walk</Option>
+        <Option value={2}>Step Up</Option>
+        <Option value={3}>Step Down</Option>
+        <Option value={4}>Monte Carlo</Option>*/
         let monthInterest = rate;//loanInfo.fixedRate;
         const monthlyRates = [];
-        monthlyRates.push(monthInterest);
-        for (let i = 1; i < loanTenure; i++) {
-            if (!(rateType === 1)) {
-                const year = Math.floor(i / 12);
-                let rate = monthInterest;
-                if (pkg === 3)
-                    rate = rate + 0.0005;
+        if (pkg === 1)
+            monthInterest = (1.80217 + 0.25) / 1200;
+        else if (pkg === 2)
+            monthInterest = (1.83088 + 0.2) / 1200;
+        else if (pkg === 3)
+            monthInterest = (0.95 + 1.1) / 1200;
+        for (let i = 0; i < loanTenure; i++) {
+            if (rateType === 2) {
+                //floating rate
                 const rand = Math.random();
-                if (simulation === 1 || simulation === 2)
-                    rate = monthInterest + year * 0.0001 * rand;
+                if (simulation === 1)
+                    monthInterest = monthInterest + randomScale * 2 * (rand - 0.5);
+                else if (simulation === 2)
+                    monthInterest = monthInterest + randomScale * 0.01 * rand;
                 else if (simulation === 3)
-                    rate = monthInterest + year * 0.0001;
+                    monthInterest = Math.max(0.0001, monthInterest - randomScale * 0.01 * rand);
                 else
-                    rate = Math.max(0.0001, monthInterest - year * 0.0001);
-                monthlyRates.push(rate);
+                    monthInterest = this.monteCarlo(monthInterest, 100);
+                monthlyRates.push(monthInterest);
             } else {//fixed rate
                 monthlyRates.push(monthInterest);
             }
@@ -67,6 +90,10 @@ class ControlForm extends Component {
                 monthlyRatesArray2 = this.simulateFloatingRate(loanInfo.rateType2, loanTenure2, monthlyInterest2, floatingPkg2, simu2);
 
             const result = [];
+            let totalInterest1 = 0;
+            let totalAmount1 = 0;
+            let totalInterest2 = 0;
+            let totalAmount2 = 0;
             for (let i = 0; i < loanTenure; i++) {
                 const monthlyInterest = monthlyRatesArray[i], monthlyInterest2 = monthlyRatesArray2[i];
                 const year = Math.floor(i / 12), month = i % 12 + 1;
@@ -76,6 +103,8 @@ class ControlForm extends Component {
                 const totalRepayment = interestPayment / (1 - Math.pow(1 + monthlyInterest, -1 * remainingTenure));
                 const principalRepayment = totalRepayment - interestPayment;
                 outstandingAmount -= principalRepayment;
+                totalInterest1 += interestPayment;
+                totalAmount1 += totalRepayment;
                 result.push({
                     tenor: tenor1,
                     interestPayment: roundNumber(interestPayment),
@@ -83,6 +112,7 @@ class ControlForm extends Component {
                     totalRepayment: roundNumber(totalRepayment),
                     interestPayment2: null,
                     principalRepayment2: null,
+                    totalRepayment2: null,
                 });
                 const tenor2 = '' + year + 'Y' + month + 'M' + 'Package2';
                 const remainingTenure2 = loanTenure2 - i;
@@ -90,16 +120,25 @@ class ControlForm extends Component {
                 const totalRepayment2 = interestPayment2 / (1 - Math.pow(1 + monthlyInterest2, -1 * remainingTenure2));
                 const principalRepayment2 = totalRepayment2 - interestPayment2;
                 outstandingAmount2 -= principalRepayment2;
+                totalInterest2 += principalRepayment2;
+                totalAmount2 += totalRepayment2;
                 result.push({
                     tenor: tenor2,
                     interestPayment2: roundNumber(interestPayment2),
                     principalRepayment2: roundNumber(principalRepayment2),
-                    totalRepayment: roundNumber(totalRepayment2),
+                    totalRepayment2: roundNumber(totalRepayment2),
                     interestPayment: null,
                     principalRepayment: null,
+                    totalRepayment: null,
                 });
             }
-            return result;
+            return {
+                result: result,
+                totalInterest1: totalInterest1,
+                totalAmount1: totalAmount1,
+                totalInterest2: totalInterest2,
+                totalAmount2: totalAmount2,
+            };
         } else {
             const loanTenure = loanInfo.loanTenure;
             const monthInterest = loanInfo.fixedRate;
@@ -110,6 +149,8 @@ class ControlForm extends Component {
             const monthlyRatesArray = this.simulateFloatingRate(loanInfo.rateType, loanTenure, monthInterest, floatingPkg, simu);
 
             const result = [];
+            let totalInterest = 0;
+            let totalAmount = 0;
             //const interestData = {name: "Interest"}, principalData = {name: "Principal"};
             for (let i = 0; i < loanTenure; i++) {
                 const monthInterest = monthlyRatesArray[i];
@@ -120,6 +161,8 @@ class ControlForm extends Component {
                 const totalRepayment = interestPayment / (1 - Math.pow(1 + monthInterest, -1 * remainingTenure));
                 const principalRepayment = totalRepayment - interestPayment;
                 outstandingAmount -= principalRepayment;
+                totalInterest += interestPayment;
+                totalAmount += totalRepayment;
                 result.push({
                     tenor: tenor,
                     interestPayment: roundNumber(interestPayment),
@@ -127,7 +170,11 @@ class ControlForm extends Component {
                     totalRepayment: roundNumber(totalRepayment)
                 });
             }
-            return result;
+            return {
+                result: result,
+                totalInterest1: totalInterest,
+                totalAmount1: totalAmount,
+            };
         }
     };
 
@@ -162,9 +209,19 @@ class ControlForm extends Component {
                     loanInfo['loanTenure2'] = loanTenure2;
                     loanInfo['rateType2'] = rateType2;
                 }
-                const result = this.calculate(loanInfo);
+                const calculation = this.calculate(loanInfo);
                 console.log(this.props);
-                this.props.setResult(result);
+                this.props.setResult(calculation.result);
+                this.props.setTotal1({
+                    totalAmount1: calculation.totalAmount1,
+                    totalInterest1: calculation.totalInterest1
+                });
+                if (calculation.totalAmount2) {
+                    this.props.setTotal2({
+                        totalAmount2: calculation.totalAmount2,
+                        totalInterest2: calculation.totalInterest2
+                    })
+                }
             }
         });
     };
@@ -323,24 +380,24 @@ class ControlForm extends Component {
                     )}
                 </Form.Item>
 
-                <Form.Item style={this.state.isFixed ? {display: 'none'} : {}} label="Floating Interest Rate(%)">
+                <Form.Item style={this.state.isFixed ? {display: 'none'} : {height: '54px'}} label="Floating Interest Rate(%)">
                     {getFieldDecorator('floatingRate')(
                         <Row>
-                            <Col span={8} offset={2} label="Package" hasFeedback>
+                            <Col span={10} offset={2} label="Package" hasFeedback>
                                 <Select placeholder="Floating Rate" defaultValue={1}
                                         onChange={this.onFloatingRateChange}>
-                                    <Option value={1}>SIBOR+1%</Option>
-                                    <Option value={2}>FHR8+1%</Option>
-                                    <Option value={3}>FHR8+1.5%</Option>
+                                    <Option value={1}>1M SIBOR(1.80217)+0.25%</Option>
+                                    <Option value={2}>3M SIBOR(1.83088)+0.2%</Option>
+                                    <Option value={3}>FHR8(0.95)+1.1%</Option>
                                 </Select>
                             </Col>
 
                             <Col span={8} offset={4} label="Simulation" hasFeedback>
                                 <Select placeholder="Simulation" defaultValue={1} onChange={this.onSimulationChange}>
                                     <Option value={1}>Random Walk</Option>
-                                    <Option value={2}>Monte Carlo</Option>
-                                    <Option value={3}>Step Up</Option>
-                                    <Option value={4}>Step Down</Option>
+                                    <Option value={2}>Step Up</Option>
+                                    <Option value={3}>Step Down</Option>
+                                    <Option value={4}>Monte Carlo</Option>
                                 </Select>
                             </Col>
                         </Row>
@@ -424,24 +481,24 @@ class ControlForm extends Component {
                     )}
                 </Form.Item>
 
-                <Form.Item style={isMultiple ? this.state.isFixed2 ? {display: 'none'} : {} : {display: 'none'}}
+                <Form.Item style={isMultiple ? this.state.isFixed2 ? {display: 'none'} : {height: '54px'} : {display: 'none'}}
                            label="Floating Interest Rate(%) 2">
                     {getFieldDecorator('floatingRate2')(
                         <Row>
-                            <Col span={8} offset={2} label="Package" hasFeedback>
+                            <Col span={10} offset={2} label="Package" hasFeedback>
                                 <Select placeholder="Floating Rate" defaultValue={1}
                                         onChange={this.onFloatingRateChange2}>
-                                    <Option value={1}>SIBOR+1%</Option>
-                                    <Option value={2}>FHR8+1%</Option>
-                                    <Option value={3}>FHR8+1.5%</Option>
+                                    <Option value={1}>1M SIBOR(1.80217)+0.25%</Option>
+                                    <Option value={2}>3M SIBOR(1.83088)+0.2%</Option>
+                                    <Option value={3}>FHR8(0.95)+1.1%</Option>
                                 </Select>
                             </Col>
                             <Col span={8} offset={4} label="Simulation" hasFeedback>
                                 <Select placeholder="Simulation" defaultValue={1} onChange={this.onSimulationChange2}>
                                     <Option value={1}>Random Walk</Option>
-                                    <Option value={2}>Monte Carlo</Option>
-                                    <Option value={3}>Step Up</Option>
-                                    <Option value={4}>Step Down</Option>
+                                    <Option value={2}>Step Up</Option>
+                                    <Option value={3}>Step Down</Option>
+                                    <Option value={4}>Monte Carlo</Option>
                                 </Select>
                             </Col>
                         </Row>,
@@ -473,5 +530,5 @@ const wrappedForm = Form.create({name: 'validate_other'})(ControlForm);
 
 export default connect(
     mapStateToProps,
-    {setResult, setMultiple}
+    {setResult, setMultiple, setTotal1, setTotal2}
 )(wrappedForm);
