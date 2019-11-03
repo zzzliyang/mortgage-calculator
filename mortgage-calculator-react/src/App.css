@@ -1,0 +1,31 @@
+@import '~antd/dist/antd.css';
+
+body {
+  padding-left: 50px;
+  padding-right: 50px;
+}
+
+.App {
+  text-align: center;
+}
+
+.control-form {
+  max-width: 900px;
+  margin: auto;
+}
+
+.control-form-buttons {
+  float: right;
+}
+
+.add-button {
+  width: 200px;
+}
+
+.calc-button {
+  width: 200px;
+}
+
+.result-chart {
+  overflow: scroll;
+}
