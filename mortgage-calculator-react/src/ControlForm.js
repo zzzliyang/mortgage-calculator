@@ -94,7 +94,11 @@ class ControlForm extends Component {
             let totalAmount1 = 0;
             let totalInterest2 = 0;
             let totalAmount2 = 0;
-            for (let i = 0; i < loanTenure; i++) {
+            const moreTenure1 = loanTenure >= loanTenure2;
+            let minTenure = loanTenure;
+            if (moreTenure1)
+                minTenure = loanTenure2
+            for (let i = 0; i < minTenure; i++) {
                 const monthlyInterest = monthlyRatesArray[i], monthlyInterest2 = monthlyRatesArray2[i];
                 const year = Math.floor(i / 12), month = i % 12 + 1;
                 const tenor1 = '' + year + 'Y' + month + 'M' + 'Package1';
@@ -131,6 +135,51 @@ class ControlForm extends Component {
                     principalRepayment: null,
                     totalRepayment: null,
                 });
+            }
+            if (moreTenure1) {
+                for (let i = minTenure; i < loanTenure; i++) {
+                    const monthInterest = monthlyRatesArray[i];
+                    const year = Math.floor(i / 12), month = i % 12 + 1;
+                    const tenor = '' + year + 'Y' + month + "M";
+                    const interestPayment = outstandingAmount * monthInterest;
+                    const remainingTenure = loanTenure - i;
+                    const totalRepayment = interestPayment / (1 - Math.pow(1 + monthInterest, -1 * remainingTenure));
+                    const principalRepayment = totalRepayment - interestPayment;
+                    outstandingAmount -= principalRepayment;
+                    totalInterest1 += interestPayment;
+                    totalAmount1 += totalRepayment;
+                    result.push({
+                        tenor: tenor,
+                        interestPayment: roundNumber(interestPayment),
+                        principalRepayment: roundNumber(principalRepayment),
+                        totalRepayment: roundNumber(totalRepayment),
+                        interestPayment2: null,
+                        principalRepayment2: null,
+                        totalRepayment2: null,
+                    });
+                }
+            } else {
+                for (let i = minTenure; i < loanTenure2; i++) {
+                    const monthInterest2 = monthlyRatesArray[i];
+                    const year = Math.floor(i / 12), month = i % 12 + 1;
+                    const tenor2 = '' + year + 'Y' + month + 'M' + 'Package2';
+                    const remainingTenure2 = loanTenure2 - i;
+                    const interestPayment2 = outstandingAmount2 * monthlyInterest2;
+                    const totalRepayment2 = interestPayment2 / (1 - Math.pow(1 + monthlyInterest2, -1 * remainingTenure2));
+                    const principalRepayment2 = totalRepayment2 - interestPayment2;
+                    outstandingAmount2 -= principalRepayment2;
+                    totalInterest2 += principalRepayment2;
+                    totalAmount2 += totalRepayment2;
+                    result.push({
+                        tenor: tenor2,
+                        interestPayment2: roundNumber(interestPayment2),
+                        principalRepayment2: roundNumber(principalRepayment2),
+                        totalRepayment2: roundNumber(totalRepayment2),
+                        interestPayment: null,
+                        principalRepayment: null,
+                        totalRepayment: null,
+                    });
+                }
             }
             return {
                 result: result,
