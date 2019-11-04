@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {connect} from "react-redux";
-import { setMultiple, setResult, setTotal1, setTotal2 } from "./redux/actions";
+import { setMultiple, setResult} from "./redux/actions";
 import {Button, Col, Divider, Form, InputNumber, Radio, Row, Select, Slider} from 'antd';
 import './App.css';
 
@@ -58,7 +58,7 @@ class ControlForm extends Component {
                 //floating rate
                 const rand = Math.random();
                 if (simulation === 1)
-                    monthInterest = monthInterest + randomScale * 2 * (rand - 0.5);
+                    monthInterest = Math.max(0, monthInterest + randomScale * 2 * (rand - 0.5));
                 else if (simulation === 2)
                     monthInterest = monthInterest + randomScale * 0.01 * rand;
                 else if (simulation === 3)
@@ -77,8 +77,8 @@ class ControlForm extends Component {
         if (loanInfo.isMultiple) {
             const loanTenure = loanInfo.loanTenure;
             const loanTenure2 = loanInfo.loanTenure2;
-            const monthlyInterest = loanInfo.fixedRate;
-            const monthlyInterest2 = loanInfo.fixedRate2;
+            const fixRate = loanInfo.fixedRate;
+            const fixRate2 = loanInfo.fixedRate2;
             let outstandingAmount = loanInfo.loanAmount;
             let outstandingAmount2 = loanInfo.loanAmount2;
             const floatingPkg = this.state.floatingPkg;
@@ -86,22 +86,18 @@ class ControlForm extends Component {
             const simu = this.state.simulation;
             const simu2 = this.state.simulation2;
 
-            const monthlyRatesArray = this.simulateFloatingRate(loanInfo.rateType, loanTenure, monthlyInterest, floatingPkg, simu),
-                monthlyRatesArray2 = this.simulateFloatingRate(loanInfo.rateType2, loanTenure2, monthlyInterest2, floatingPkg2, simu2);
+            const monthlyRatesArray = this.simulateFloatingRate(loanInfo.rateType, loanTenure, fixRate, floatingPkg, simu),
+                monthlyRatesArray2 = this.simulateFloatingRate(loanInfo.rateType2, loanTenure2, fixRate2, floatingPkg2, simu2);
 
             const result = [];
             let totalInterest1 = 0;
             let totalAmount1 = 0;
             let totalInterest2 = 0;
             let totalAmount2 = 0;
-            const moreTenure1 = loanTenure >= loanTenure2;
-            let minTenure = loanTenure;
-            if (moreTenure1)
-                minTenure = loanTenure2
-            for (let i = 0; i < minTenure; i++) {
-                const monthlyInterest = monthlyRatesArray[i], monthlyInterest2 = monthlyRatesArray2[i];
+            for (let i = 0; i < loanTenure; i++) {
+                const monthlyInterest = monthlyRatesArray[i];
                 const year = Math.floor(i / 12), month = i % 12 + 1;
-                const tenor1 = '' + year + 'Y' + month + 'M' + 'Package1';
+                const tenor1 = '' + year + 'Y' + month + 'M-Package1';
                 const interestPayment = outstandingAmount * monthlyInterest;
                 const remainingTenure = loanTenure - i;
                 const totalRepayment = interestPayment / (1 - Math.pow(1 + monthlyInterest, -1 * remainingTenure));
@@ -118,57 +114,15 @@ class ControlForm extends Component {
                     principalRepayment2: null,
                     totalRepayment2: null,
                 });
-                const tenor2 = '' + year + 'Y' + month + 'M' + 'Package2';
-                const remainingTenure2 = loanTenure2 - i;
-                const interestPayment2 = outstandingAmount2 * monthlyInterest2;
-                const totalRepayment2 = interestPayment2 / (1 - Math.pow(1 + monthlyInterest2, -1 * remainingTenure2));
-                const principalRepayment2 = totalRepayment2 - interestPayment2;
-                outstandingAmount2 -= principalRepayment2;
-                totalInterest2 += principalRepayment2;
-                totalAmount2 += totalRepayment2;
-                result.push({
-                    tenor: tenor2,
-                    interestPayment2: roundNumber(interestPayment2),
-                    principalRepayment2: roundNumber(principalRepayment2),
-                    totalRepayment2: roundNumber(totalRepayment2),
-                    interestPayment: null,
-                    principalRepayment: null,
-                    totalRepayment: null,
-                });
-            }
-            if (moreTenure1) {
-                for (let i = minTenure; i < loanTenure; i++) {
-                    const monthInterest = monthlyRatesArray[i];
-                    const year = Math.floor(i / 12), month = i % 12 + 1;
-                    const tenor = '' + year + 'Y' + month + "M";
-                    const interestPayment = outstandingAmount * monthInterest;
-                    const remainingTenure = loanTenure - i;
-                    const totalRepayment = interestPayment / (1 - Math.pow(1 + monthInterest, -1 * remainingTenure));
-                    const principalRepayment = totalRepayment - interestPayment;
-                    outstandingAmount -= principalRepayment;
-                    totalInterest1 += interestPayment;
-                    totalAmount1 += totalRepayment;
-                    result.push({
-                        tenor: tenor,
-                        interestPayment: roundNumber(interestPayment),
-                        principalRepayment: roundNumber(principalRepayment),
-                        totalRepayment: roundNumber(totalRepayment),
-                        interestPayment2: null,
-                        principalRepayment2: null,
-                        totalRepayment2: null,
-                    });
-                }
-            } else {
-                for (let i = minTenure; i < loanTenure2; i++) {
-                    const monthInterest2 = monthlyRatesArray[i];
-                    const year = Math.floor(i / 12), month = i % 12 + 1;
-                    const tenor2 = '' + year + 'Y' + month + 'M' + 'Package2';
+                if (i < loanTenure2) {
+                    const monthlyInterest2 = monthlyRatesArray2[i];
+                    const tenor2 = '' + year + 'Y' + month + 'M-Package2';
                     const remainingTenure2 = loanTenure2 - i;
                     const interestPayment2 = outstandingAmount2 * monthlyInterest2;
                     const totalRepayment2 = interestPayment2 / (1 - Math.pow(1 + monthlyInterest2, -1 * remainingTenure2));
                     const principalRepayment2 = totalRepayment2 - interestPayment2;
                     outstandingAmount2 -= principalRepayment2;
-                    totalInterest2 += principalRepayment2;
+                    totalInterest2 += interestPayment2;
                     totalAmount2 += totalRepayment2;
                     result.push({
                         tenor: tenor2,
@@ -180,6 +134,27 @@ class ControlForm extends Component {
                         totalRepayment: null,
                     });
                 }
+            }
+            for (let i = loanTenure; i < loanTenure2; i++) {
+                const monthlyInterest2 = monthlyRatesArray2[i];
+                const year = Math.floor(i / 12), month = i % 12 + 1;
+                const tenor2 = '' + year + 'Y' + month + 'M-Package2';
+                const remainingTenure2 = loanTenure2 - i;
+                const interestPayment2 = outstandingAmount2 * monthlyInterest2;
+                const totalRepayment2 = interestPayment2 / (1 - Math.pow(1 + monthlyInterest2, -1 * remainingTenure2));
+                const principalRepayment2 = totalRepayment2 - interestPayment2;
+                outstandingAmount2 -= principalRepayment2;
+                totalInterest2 += interestPayment2;
+                totalAmount2 += totalRepayment2;
+                result.push({
+                    tenor: tenor2,
+                    interestPayment2: roundNumber(interestPayment2),
+                    principalRepayment2: roundNumber(principalRepayment2),
+                    totalRepayment2: roundNumber(totalRepayment2),
+                    interestPayment: null,
+                    principalRepayment: null,
+                    totalRepayment: null,
+                });
             }
             return {
                 result: result,
@@ -260,17 +235,14 @@ class ControlForm extends Component {
                 }
                 const calculation = this.calculate(loanInfo);
                 console.log(this.props);
-                this.props.setResult(calculation.result);
-                this.props.setTotal1({
+                this.props.setResult({
+                    result: calculation.result,
+                    resultMultiple: isMultiple,
                     totalAmount1: calculation.totalAmount1,
-                    totalInterest1: calculation.totalInterest1
+                    totalInterest1: calculation.totalInterest1,
+                    totalAmount2: calculation.totalAmount2,
+                    totalInterest2: calculation.totalInterest2
                 });
-                if (calculation.totalAmount2) {
-                    this.props.setTotal2({
-                        totalAmount2: calculation.totalAmount2,
-                        totalInterest2: calculation.totalInterest2
-                    })
-                }
             }
         });
     };
@@ -512,7 +484,7 @@ class ControlForm extends Component {
                                         5: '5',
                                     }}
                                     onChange={this.onFixedRateChange}
-                                    value={typeof fixedRate === 'number' ? fixedRate : 0}
+                                    value={typeof fixedRate2 === 'number' ? fixedRate2 : 0}
                                     step={0.01}
                                 />
                             </Col>
@@ -522,7 +494,7 @@ class ControlForm extends Component {
                                     max={6}
                                     style={{marginLeft: 0}}
                                     step={0.01}
-                                    value={fixedRate}
+                                    value={fixedRate2}
                                     onChange={this.onFixedRateChange}
                                 />
                             </Col>
@@ -579,5 +551,5 @@ const wrappedForm = Form.create({name: 'validate_other'})(ControlForm);
 
 export default connect(
     mapStateToProps,
-    {setResult, setMultiple, setTotal1, setTotal2}
+    {setResult, setMultiple}
 )(wrappedForm);

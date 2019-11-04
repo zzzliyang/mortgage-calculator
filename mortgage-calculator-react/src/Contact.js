@@ -101,7 +101,7 @@ class Contact extends Component {
                 return;
             }
             console.log('Received values of form: ', values);
-            const loanAmount = values.loanAmount != 0 ? values.loanAmount : median(this.props.customerState.loanAmounts);
+            const loanAmount = values.loanAmount !== 0 ? values.loanAmount : median(this.props.customerState.loanAmounts);
             const customer = {
                 name: values.name,
                 contact: values.contact,

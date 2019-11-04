@@ -5,17 +5,6 @@ import DataSet from "@antv/data-set";
 
 const mapStateToProps = state => state;
 
-const scale = {
-    totalRepayment: {
-        type: 'linear',
-        min: 0,
-    },
-    value: {
-        type: 'linear',
-        min: 0,
-    },
-};
-
 function roundNumber(number) {
     return Math.round(number * 100) / 100;
 }
@@ -24,25 +13,58 @@ class ResultChart extends React.Component {
     render() {
         const ds = new DataSet();
         const dv = ds.createView().source(this.props.resultState.result);
-        const isMultiple = this.props.resultState.isMultiple;
-        const fields = isMultiple
-            ? ['interestPayment', 'principalRepayment', 'interestPayment2', 'principalRepayment2']
-            : ['interestPayment', 'principalRepayment'];
-        const legends = isMultiple
-            ? [
+        const isMultiple = this.props.resultState.resultMultiple;
+        let maxScale = Math.max(0, Math.max.apply(null, this.props.resultState.result.map(r => r.totalRepayment)));
+        if (isMultiple)
+            maxScale = Math.max(maxScale, Math.max.apply(null, this.props.resultState.result.map(r => r.totalRepayment2)));
+        const fields = isMultiple ?
+            ['interestPayment', 'principalRepayment', 'interestPayment2', 'principalRepayment2'] :
+            ['interestPayment', 'principalRepayment'];
+        const legends = isMultiple ?
+            [
                 {value: 'interestPayment', marker: {symbol: 'square', fill: '#2b6cbb'}},
                 {value: 'principalRepayment', marker: {symbol: 'square', fill: '#41a2fc'}},
                 {value: 'totalRepayment', marker: {symbol: 'square', fill: '#fc0618'}},
                 {value: 'interestPayment2', marker: {symbol: 'square', fill: '#067500'}},
                 {value: 'principalRepayment2', marker: {symbol: 'square', fill: '#48fc05'}},
                 {value: 'totalRepayment2', marker: {symbol: 'square', fill: '#fcd500'}},
-            ]
-            :
+            ] :
             [
                 {value: 'interestPayment', marker: {symbol: 'square', fill: '#2b6cbb'}},
                 {value: 'principalRepayment', marker: {symbol: 'square', fill: '#41a2fc'}},
                 {value: 'totalRepayment', marker: {symbol: 'square', fill: '#fc0618'}},
             ];
+        maxScale += 200;
+        const scale = isMultiple ?
+            {
+                totalRepayment: {
+                    type: 'linear',
+                    min: 0,
+                    max: maxScale,
+                },
+                totalRepayment2: {
+                    type: 'linear',
+                    min: 0,
+                    max: maxScale,
+                },
+                value: {
+                    type: 'linear',
+                    min: 0,
+                    max: maxScale,
+                },
+            } :
+            {
+                totalRepayment: {
+                    type: 'linear',
+                    min: 0,
+                    max: maxScale,
+                },
+                value: {
+                    type: 'linear',
+                    min: 0,
+                    max: maxScale,
+                },
+            }
         dv.transform({
             type: "fold",
             fields: fields,
@@ -60,22 +82,22 @@ class ResultChart extends React.Component {
                 <Chart height={400} scale={scale} width={50 * this.props.resultState.result.length} data={dv}>
                     <Legend
                         custom
-                        items={ legends }
+                        items={legends}
                         position="bottom-left"
-                        offsetX={100}
+                        offsetX={30}
                         itemFormatter={val => {
                             if (val === 'interestPayment')
-                                return "Package 1 - Interest Repayment - Total: " + roundNumber(totalInterest1);
+                                return "Package 1 - Interest Repayment - Total: $" + roundNumber(totalInterest1);
                             if (val === 'principalRepayment')
-                                return "Package 1 - Principal Repayment - Total: " + roundNumber(totalPrincipal1);
+                                return "Package 1 - Principal Repayment - Total: $" + roundNumber(totalPrincipal1);
                             if (val === 'totalRepayment')
-                                return "Package 1 - Total Repayment: " + roundNumber(totalAmount1);
+                                return "Package 1 - Total Repayment: $" + roundNumber(totalAmount1);
                             if (val === 'interestPayment2')
-                                return "Package 2 - Interest Repayment" + roundNumber(totalInterest2);
+                                return "Package 2 - Interest Repayment - Total: $" + roundNumber(totalInterest2);
                             if (val === 'principalRepayment2')
-                                return "Package 2 - Principal Repayment" + roundNumber(totalPrincipal2);
+                                return "Package 2 - Principal Repayment - Total: $" + roundNumber(totalPrincipal2);
                             if (val === 'totalRepayment2')
-                                return "Package 2 - Total Repayment: " + roundNumber(totalAmount2);
+                                return "Package 2 - Total Repayment: $" + roundNumber(totalAmount2);
                         }}
                     />
                     <Axis name="tenor"/>
