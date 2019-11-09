@@ -325,206 +325,214 @@ class ControlForm extends Component {
         const addPlanButtonText = isMultiple ? 'Remove this package' : 'Add a package';
         return (
             <Form {...formItemLayout} onSubmit={this.handleSubmit} className="control-form">
-                <Divider>Package 1</Divider>
+                <Row>
+                    <Col span={11} style={{ display: 'block' }}>
+                        <Divider>Package 1</Divider>
 
-                <Form.Item label="Loan Amount">
-                    {getFieldDecorator('loanAmount', {
-                        initialValue: 700000,
-                        rules: [{required: true, message: 'Please select a interest rate type!'}],
-                    })(
-                        <InputNumber
-                            style={{width: '100%'}}
-                            min={1}
-                            max={100000000}
-                            formatter={value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                            parser={value => value.replace(/\$\s?|(,*)/g, '')}/>
-                    )}
-                </Form.Item>
-
-                <Form.Item label="Interest Rate Type">
-                    {getFieldDecorator('rateType', {initialValue: 1})(
-                        <Radio.Group name="radiogroup" onChange={this.onRateTypeChange}>
-                            <Radio value={1}>Fixed Rate</Radio>
-                            <Radio value={2}>Floating Rate</Radio>
-                        </Radio.Group>
-                    )}
-                </Form.Item>
-
-                <Form.Item label="Loan tenure(in years)">
-                    {getFieldDecorator('loanTenure', {
-                        initialValue: 30
-                    })(
-                        <Slider
-                            max={50}
-                            marks={{
-                                10: '10',
-                                20: '20',
-                                30: '30',
-                                40: '40',
-                                50: '50'
-                            }}
-                        />
-                    )}
-                </Form.Item>
-
-                <Form.Item style={this.state.isFixed ? {} : {display: 'none'}} label="Annual Interest Rate(%)">
-                    {getFieldDecorator('fixedRate')(
-                        <Row>
-                            <Col span={20}>
-                                <Slider
-                                    min={0}
-                                    max={6}
-                                    marks={{
-                                        1: '1',
-                                        1.5: '1.5',
-                                        2: '2',
-                                        2.5: '2.5',
-                                        3: '3',
-                                        5: '5',
-                                    }}
-                                    onChange={this.onFixedRateChange}
-                                    value={typeof fixedRate === 'number' ? fixedRate : 0}
-                                    step={0.01}
-                                />
-                            </Col>
-                            <Col span={4}>
+                        <Form.Item label="Loan Amount">
+                            {getFieldDecorator('loanAmount', {
+                                initialValue: 700000,
+                                rules: [{required: true, message: 'Please select a interest rate type!'}],
+                            })(
                                 <InputNumber
-                                    min={0}
-                                    max={6}
-                                    style={{marginLeft: 0}}
-                                    step={0.01}
-                                    value={fixedRate}
-                                    onChange={this.onFixedRateChange}
-                                />
-                            </Col>
-                        </Row>
-                    )}
-                </Form.Item>
+                                    style={{width: '100%'}}
+                                    min={1}
+                                    max={100000000}
+                                    formatter={value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                    parser={value => value.replace(/\$\s?|(,*)/g, '')}/>
+                            )}
+                        </Form.Item>
 
-                <Form.Item style={this.state.isFixed ? {display: 'none'} : {height: '54px'}} label="Floating Interest Rate(%)">
-                    {getFieldDecorator('floatingRate')(
-                        <Row>
-                            <Col span={10} offset={2} label="Package" hasFeedback>
-                                <Select placeholder="Floating Rate" defaultValue={1}
-                                        onChange={this.onFloatingRateChange}>
-                                    <Option value={1}>1M SIBOR(1.80217)+0.25%</Option>
-                                    <Option value={2}>3M SIBOR(1.83088)+0.2%</Option>
-                                    <Option value={3}>FHR8(0.95)+1.1%</Option>
-                                </Select>
-                            </Col>
+                        <Form.Item label="Interest Rate Type">
+                            {getFieldDecorator('rateType', {initialValue: 1})(
+                                <Radio.Group name="radiogroup" onChange={this.onRateTypeChange}>
+                                    <Radio value={1}>Fixed Rate</Radio>
+                                    <Radio value={2}>Floating Rate</Radio>
+                                </Radio.Group>
+                            )}
+                        </Form.Item>
 
-                            <Col span={8} offset={4} label="Simulation" hasFeedback>
-                                <Select placeholder="Simulation" defaultValue={1} onChange={this.onSimulationChange}>
-                                    <Option value={1}>Random Walk</Option>
-                                    <Option value={2}>Step Up</Option>
-                                    <Option value={3}>Step Down</Option>
-                                    <Option value={4}>Monte Carlo</Option>
-                                </Select>
-                            </Col>
-                        </Row>
-                    )}
-                </Form.Item>
-
-                <Divider style={plan2Style}>Package 2</Divider>
-
-                <Form.Item label="Loan Amount 2" style={plan2Style}>
-                    {getFieldDecorator('loanAmount2', {
-                        initialValue: 700000,
-                        rules: [{required: true, message: 'Please select a interest rate type!'}],
-                    })(
-                        <InputNumber
-                            style={{width: '100%'}}
-                            min={1}
-                            max={100000000}
-                            formatter={value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                            parser={value => value.replace(/\$\s?|(,*)/g, '')}/>
-                    )}
-                </Form.Item>
-
-                <Form.Item label="Interest Rate Type 2" style={plan2Style}>
-                    {getFieldDecorator('rateType2', {initialValue: 1})(
-                        <Radio.Group name="radiogroup" onChange={this.onRateTypeChange2}>
-                            <Radio value={1}>Fixed Rate</Radio>
-                            <Radio value={2}>Floating Rate</Radio>
-                        </Radio.Group>
-                    )}
-                </Form.Item>
-
-                <Form.Item label="Loan tenure(in years) 2" style={plan2Style}>
-                    {getFieldDecorator('loanTenure2', {
-                        initialValue: 30
-                    })(
-                        <Slider
-                            max={50}
-                            marks={{
-                                10: '10',
-                                20: '20',
-                                30: '30',
-                                40: '40',
-                                50: '50'
-                            }}
-                        />
-                    )}
-                </Form.Item>
-
-                <Form.Item style={this.state.isFixed2 && isMultiple ? {} : {display: 'none'}}
-                           label="Annual Interest Rate(%) 2">
-                    {getFieldDecorator('fixedRate2')(
-                        <Row>
-                            <Col span={20}>
+                        <Form.Item label="Loan tenure(in years)">
+                            {getFieldDecorator('loanTenure', {
+                                initialValue: 30
+                            })(
                                 <Slider
-                                    min={0}
-                                    max={6}
+                                    max={50}
                                     marks={{
-                                        1: '1',
-                                        1.5: '1.5',
-                                        2: '2',
-                                        2.5: '2.5',
-                                        3: '3',
-                                        5: '5',
+                                        10: '10',
+                                        20: '20',
+                                        30: '30',
+                                        40: '40',
+                                        50: '50'
                                     }}
-                                    onChange={this.onFixedRateChange}
-                                    value={typeof fixedRate2 === 'number' ? fixedRate2 : 0}
-                                    step={0.01}
                                 />
-                            </Col>
-                            <Col span={4}>
-                                <InputNumber
-                                    min={0}
-                                    max={6}
-                                    style={{marginLeft: 0}}
-                                    step={0.01}
-                                    value={fixedRate2}
-                                    onChange={this.onFixedRateChange}
-                                />
-                            </Col>
-                        </Row>,
-                    )}
-                </Form.Item>
+                            )}
+                        </Form.Item>
 
-                <Form.Item style={isMultiple ? this.state.isFixed2 ? {display: 'none'} : {height: '54px'} : {display: 'none'}}
-                           label="Floating Interest Rate(%) 2">
-                    {getFieldDecorator('floatingRate2')(
-                        <Row>
-                            <Col span={10} offset={2} label="Package" hasFeedback>
-                                <Select placeholder="Floating Rate" defaultValue={1}
-                                        onChange={this.onFloatingRateChange2}>
-                                    <Option value={1}>1M SIBOR(1.80217)+0.25%</Option>
-                                    <Option value={2}>3M SIBOR(1.83088)+0.2%</Option>
-                                    <Option value={3}>FHR8(0.95)+1.1%</Option>
-                                </Select>
-                            </Col>
-                            <Col span={8} offset={4} label="Simulation" hasFeedback>
-                                <Select placeholder="Simulation" defaultValue={1} onChange={this.onSimulationChange2}>
-                                    <Option value={1}>Random Walk</Option>
-                                    <Option value={2}>Step Up</Option>
-                                    <Option value={3}>Step Down</Option>
-                                    <Option value={4}>Monte Carlo</Option>
-                                </Select>
-                            </Col>
-                        </Row>,
-                    )}
-                </Form.Item>
+                        <Form.Item style={this.state.isFixed ? {} : {display: 'none'}} label="Annual Interest Rate(%)">
+                            {getFieldDecorator('fixedRate')(
+                                <Row>
+                                    <Col span={20}>
+                                        <Slider
+                                            min={0}
+                                            max={6}
+                                            marks={{
+                                                1: '1',
+                                                1.5: '1.5',
+                                                2: '2',
+                                                2.5: '2.5',
+                                                3: '3',
+                                                5: '5',
+                                            }}
+                                            onChange={this.onFixedRateChange}
+                                            value={typeof fixedRate === 'number' ? fixedRate : 0}
+                                            step={0.01}
+                                        />
+                                    </Col>
+                                    <Col span={4}>
+                                        <InputNumber
+                                            min={0}
+                                            max={6}
+                                            style={{marginLeft: 0}}
+                                            step={0.01}
+                                            value={fixedRate}
+                                            onChange={this.onFixedRateChange}
+                                        />
+                                    </Col>
+                                </Row>
+                            )}
+                        </Form.Item>
+
+                        <Form.Item style={this.state.isFixed ? {display: 'none'} : {height: '54px'}} label="Floating Interest Rate(%)">
+                            {getFieldDecorator('floatingRate')(
+                                <Row>
+                                    <Col span={10} offset={2} label="Package" hasFeedback>
+                                        <Select placeholder="Floating Rate" defaultValue={1}
+                                                onChange={this.onFloatingRateChange}>
+                                            <Option value={1}>1M SIBOR(1.80217)+0.25%</Option>
+                                            <Option value={2}>3M SIBOR(1.83088)+0.2%</Option>
+                                            <Option value={3}>FHR8(0.95)+1.1%</Option>
+                                        </Select>
+                                    </Col>
+
+                                    <Col span={8} offset={4} label="Simulation" hasFeedback>
+                                        <Select placeholder="Simulation" defaultValue={1} onChange={this.onSimulationChange}>
+                                            <Option value={1}>Random Walk</Option>
+                                            <Option value={2}>Step Up</Option>
+                                            <Option value={3}>Step Down</Option>
+                                            <Option value={4}>Monte Carlo</Option>
+                                        </Select>
+                                    </Col>
+                                </Row>
+                            )}
+                        </Form.Item>
+                    </Col>
+
+                    <Col span={11} offset={1} style={{ display: 'block' }}>
+                        <Divider style={plan2Style}>Package 2</Divider>
+
+                        <Form.Item label="Loan Amount 2" style={plan2Style}>
+                            {getFieldDecorator('loanAmount2', {
+                                initialValue: 700000,
+                                rules: [{required: true, message: 'Please select a interest rate type!'}],
+                            })(
+                                <InputNumber
+                                    style={{width: '100%'}}
+                                    min={1}
+                                    max={100000000}
+                                    formatter={value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                    parser={value => value.replace(/\$\s?|(,*)/g, '')}/>
+                            )}
+                        </Form.Item>
+
+                        <Form.Item label="Interest Rate Type 2" style={plan2Style}>
+                            {getFieldDecorator('rateType2', {initialValue: 1})(
+                                <Radio.Group name="radiogroup" onChange={this.onRateTypeChange2}>
+                                    <Radio value={1}>Fixed Rate</Radio>
+                                    <Radio value={2}>Floating Rate</Radio>
+                                </Radio.Group>
+                            )}
+                        </Form.Item>
+
+                        <Form.Item label="Loan tenure(in years) 2" style={plan2Style}>
+                            {getFieldDecorator('loanTenure2', {
+                                initialValue: 30
+                            })(
+                                <Slider
+                                    max={50}
+                                    marks={{
+                                        10: '10',
+                                        20: '20',
+                                        30: '30',
+                                        40: '40',
+                                        50: '50'
+                                    }}
+                                />
+                            )}
+                        </Form.Item>
+
+                        <Form.Item style={this.state.isFixed2 && isMultiple ? {} : {display: 'none'}}
+                                   label="Annual Interest Rate(%) 2">
+                            {getFieldDecorator('fixedRate2')(
+                                <Row>
+                                    <Col span={20}>
+                                        <Slider
+                                            min={0}
+                                            max={6}
+                                            marks={{
+                                                1: '1',
+                                                1.5: '1.5',
+                                                2: '2',
+                                                2.5: '2.5',
+                                                3: '3',
+                                                5: '5',
+                                            }}
+                                            onChange={this.onFixedRateChange}
+                                            value={typeof fixedRate2 === 'number' ? fixedRate2 : 0}
+                                            step={0.01}
+                                        />
+                                    </Col>
+                                    <Col span={4}>
+                                        <InputNumber
+                                            min={0}
+                                            max={6}
+                                            style={{marginLeft: 0}}
+                                            step={0.01}
+                                            value={fixedRate2}
+                                            onChange={this.onFixedRateChange}
+                                        />
+                                    </Col>
+                                </Row>,
+                            )}
+                        </Form.Item>
+
+                        <Form.Item style={isMultiple ? this.state.isFixed2 ? {display: 'none'} : {height: '54px'} : {display: 'none'}}
+                                   label="Floating Interest Rate(%) 2">
+                            {getFieldDecorator('floatingRate2')(
+                                <Row>
+                                    <Col span={10} offset={2} label="Package" hasFeedback>
+                                        <Select placeholder="Floating Rate" defaultValue={1}
+                                                onChange={this.onFloatingRateChange2}>
+                                            <Option value={1}>1M SIBOR(1.80217)+0.25%</Option>
+                                            <Option value={2}>3M SIBOR(1.83088)+0.2%</Option>
+                                            <Option value={3}>FHR8(0.95)+1.1%</Option>
+                                        </Select>
+                                    </Col>
+                                    <Col span={8} offset={4} label="Simulation" hasFeedback>
+                                        <Select placeholder="Simulation" defaultValue={1} onChange={this.onSimulationChange2}>
+                                            <Option value={1}>Random Walk</Option>
+                                            <Option value={2}>Step Up</Option>
+                                            <Option value={3}>Step Down</Option>
+                                            <Option value={4}>Monte Carlo</Option>
+                                        </Select>
+                                    </Col>
+                                </Row>,
+                            )}
+                        </Form.Item>
+
+                    </Col>
+                </Row>
+
 
                 <Form.Item wrapperCol={{span: 12, offset: 6}} className="control-form-buttons">
                     <Button className="add-button" type="primary" icon="plus" onClick={this.onAddPlanButtonClick}>
@@ -534,6 +542,7 @@ class ControlForm extends Component {
                         Calculate
                     </Button>
                 </Form.Item>
+
             </Form>
         );
     }
