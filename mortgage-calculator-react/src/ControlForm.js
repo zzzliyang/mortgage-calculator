@@ -13,7 +13,24 @@ function roundNumber(number, decimal=2) {
 
 const mapStateToProps = state => state;
 
-const randomScale = 0.0001;
+const normalScale = 0.0001;
+
+const volatileScale = 0.0005;
+
+const stressedScale = 0.001;
+
+const getScale = int => {
+    switch(int) {
+        case 1:
+            return normalScale;
+        case 2:
+            return volatileScale;
+        case 3:
+            return stressedScale;
+        default:
+            return normalScale;
+    }
+}
 
 class ControlForm extends Component {
 
@@ -26,18 +43,21 @@ class ControlForm extends Component {
         simulation2: 1,
         floatingPkg: 1,
         floatingPkg2: 1,
+        scale: 1,
+        scale2: 1,
         isMultiple: false,
     };
 
-    monteCarlo = (rate, times) => {
-        const rates = [];
+    monteCarlo = (rate, times, randomScale) => {
+        let sum = 0;
         for (let i = 0; i < times; i++) {
             const rand = Math.random();
-            rates.push(rate + randomScale * 2 * (rand - 0.5))
+            sum += rate + randomScale * 2 * (rand - 0.5);
         }
+        return Math.max(0.0001, sum / times);
     }
 
-    simulateFloatingRate = (rateType, loanTenure, rate, pkg, simulation) => {
+    simulateFloatingRate = (rateType, loanTenure, rate, pkg, simulation, scale) => {
         /* Packages
         <Option value={1}>1M SIBOR(1.80217)+0.25%</Option>
         <Option value={2}>3M SIBOR(1.83088)+0.2%</Option>
@@ -57,6 +77,7 @@ class ControlForm extends Component {
             monthInterest = (0.95 + 1.1) / 1200;
         for (let i = 0; i < loanTenure; i++) {
             if (rateType === 2) {
+                const randomScale = getScale(scale);
                 //floating rate
                 const rand = Math.random();
                 if (simulation === 1)
@@ -66,7 +87,7 @@ class ControlForm extends Component {
                 else if (simulation === 3)
                     monthInterest = Math.max(0.0001, monthInterest - randomScale * 0.01 * rand);
                 else
-                    monthInterest = this.monteCarlo(monthInterest, 100);
+                    monthInterest = this.monteCarlo(monthInterest, 100, randomScale);
                 monthlyRates.push(monthInterest);
             } else {//fixed rate
                 monthlyRates.push(monthInterest);
@@ -87,9 +108,11 @@ class ControlForm extends Component {
             const floatingPkg2 = this.state.floatingPkg2;
             const simu = this.state.simulation;
             const simu2 = this.state.simulation2;
+            const scale = this.state.scale;
+            const scale2 = this.state.scale2;
 
-            const monthlyRatesArray = this.simulateFloatingRate(loanInfo.rateType, loanTenure, fixRate, floatingPkg, simu),
-                monthlyRatesArray2 = this.simulateFloatingRate(loanInfo.rateType2, loanTenure2, fixRate2, floatingPkg2, simu2);
+            const monthlyRatesArray = this.simulateFloatingRate(loanInfo.rateType, loanTenure, fixRate, floatingPkg, simu, scale),
+                monthlyRatesArray2 = this.simulateFloatingRate(loanInfo.rateType2, loanTenure2, fixRate2, floatingPkg2, simu2, scale2);
 
             const result = [];
             let totalInterest1 = 0;
@@ -177,8 +200,9 @@ class ControlForm extends Component {
             let outstandingAmount = loanInfo.loanAmount;
             const floatingPkg = this.state.floatingPkg;
             const simu = this.state.simulation;
+            const scale = this.state.scale;
 
-            const monthlyRatesArray = this.simulateFloatingRate(loanInfo.rateType, loanTenure, monthInterest, floatingPkg, simu);
+            const monthlyRatesArray = this.simulateFloatingRate(loanInfo.rateType, loanTenure, monthInterest, floatingPkg, simu, scale);
 
             const result = [];
             let totalInterest = 0;
@@ -322,6 +346,24 @@ class ControlForm extends Component {
         });
     };
 
+    onScaleChange = value => {
+        if (isNaN(value)) {
+            return;
+        }
+        this.setState({
+            scale: value,
+        });
+    };
+
+    onScaleChange2 = value => {
+        if (isNaN(value)) {
+            return;
+        }
+        this.setState({
+            scale2: value,
+        });
+    };
+
     render() {
         const {getFieldDecorator} = this.props.form;
         const formItemLayout = {
@@ -416,7 +458,7 @@ class ControlForm extends Component {
                         <Form.Item style={this.state.isFixed ? {display: 'none'} : {height: '54px'}} label="Floating Interest Rate(%)">
                             {getFieldDecorator('floatingRate')(
                                 <Row>
-                                    <Col span={10} offset={2} label="Package" hasFeedback>
+                                    <Col span={10} offset={0} label="Package" hasFeedback>
                                         <Select placeholder="Floating Rate" defaultValue={1}
                                                 onChange={this.onFloatingRateChange}>
                                             <Option value={1}>1M SIBOR(1.80217)+0.25%</Option>
@@ -425,12 +467,20 @@ class ControlForm extends Component {
                                         </Select>
                                     </Col>
 
-                                    <Col span={8} offset={4} label="Simulation" hasFeedback>
+                                    <Col span={7} offset={1} label="Simulation" hasFeedback>
                                         <Select placeholder="Simulation" defaultValue={1} onChange={this.onSimulationChange}>
                                             <Option value={1}>Random Walk</Option>
                                             <Option value={2}>Step Up</Option>
                                             <Option value={3}>Step Down</Option>
                                             <Option value={4}>Monte Carlo</Option>
+                                        </Select>
+                                    </Col>
+
+                                    <Col span={5} offset={1} label="Scale" hasFeedback>
+                                        <Select placeholder="Scale" defaultValue={1} onChange={this.onScaleChange}>
+                                            <Option value={1}>Normal</Option>
+                                            <Option value={2}>Volatile</Option>
+                                            <Option value={3}>Stressed</Option>
                                         </Select>
                                     </Col>
                                 </Row>
@@ -520,20 +570,27 @@ class ControlForm extends Component {
                                    label="Floating Interest Rate(%) 2">
                             {getFieldDecorator('floatingRate2')(
                                 <Row>
-                                    <Col span={10} offset={2} label="Package" hasFeedback>
-                                        <Select placeholder="Floating Rate" defaultValue={1}
+                                    <Col span={10} offset={0} label="Package2" hasFeedback>
+                                        <Select placeholder="Floating Rate 2" defaultValue={1}
                                                 onChange={this.onFloatingRateChange2}>
                                             <Option value={1}>1M SIBOR(1.80217)+0.25%</Option>
                                             <Option value={2}>3M SIBOR(1.83088)+0.2%</Option>
                                             <Option value={3}>FHR8(0.95)+1.1%</Option>
                                         </Select>
                                     </Col>
-                                    <Col span={8} offset={4} label="Simulation" hasFeedback>
-                                        <Select placeholder="Simulation" defaultValue={1} onChange={this.onSimulationChange2}>
+                                    <Col span={7} offset={1} label="Simulation2" hasFeedback>
+                                        <Select placeholder="Simulation2" defaultValue={1} onChange={this.onSimulationChange2}>
                                             <Option value={1}>Random Walk</Option>
                                             <Option value={2}>Step Up</Option>
                                             <Option value={3}>Step Down</Option>
                                             <Option value={4}>Monte Carlo</Option>
+                                        </Select>
+                                    </Col>
+                                    <Col span={5} offset={1} label="Scale2" hasFeedback>
+                                        <Select placeholder="Scale2" defaultValue={1} onChange={this.onScaleChange2}>
+                                            <Option value={1}>Normal</Option>
+                                            <Option value={2}>Volatile</Option>
+                                            <Option value={3}>Stressed</Option>
                                         </Select>
                                     </Col>
                                 </Row>,
