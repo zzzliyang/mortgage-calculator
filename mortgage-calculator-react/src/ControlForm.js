@@ -6,8 +6,9 @@ import './App.css';
 
 const {Option} = Select;
 
-function roundNumber(number) {
-    return Math.round(number * 100) / 100;
+function roundNumber(number, decimal=2) {
+    const scale = Math.pow(10, decimal)
+    return Math.round(number * scale) / scale;
 }
 
 const mapStateToProps = state => state;
@@ -24,7 +25,8 @@ class ControlForm extends Component {
         simulation: 1,
         simulation2: 1,
         floatingPkg: 1,
-        floatingPkg2: 1
+        floatingPkg2: 1,
+        isMultiple: false,
     };
 
     monteCarlo = (rate, times) => {
@@ -58,7 +60,7 @@ class ControlForm extends Component {
                 //floating rate
                 const rand = Math.random();
                 if (simulation === 1)
-                    monthInterest = Math.max(0, monthInterest + randomScale * 2 * (rand - 0.5));
+                    monthInterest = Math.max(0.0001, monthInterest + randomScale * 2 * (rand - 0.5));
                 else if (simulation === 2)
                     monthInterest = monthInterest + randomScale * 0.01 * rand;
                 else if (simulation === 3)
@@ -110,9 +112,11 @@ class ControlForm extends Component {
                     interestPayment: roundNumber(interestPayment),
                     principalRepayment: roundNumber(principalRepayment),
                     totalRepayment: roundNumber(totalRepayment),
+                    currentInterest: roundNumber(monthlyInterest * 1200),
                     interestPayment2: null,
                     principalRepayment2: null,
                     totalRepayment2: null,
+                    currentInterest2: null,
                 });
                 if (i < loanTenure2) {
                     const monthlyInterest2 = monthlyRatesArray2[i];
@@ -129,9 +133,11 @@ class ControlForm extends Component {
                         interestPayment2: roundNumber(interestPayment2),
                         principalRepayment2: roundNumber(principalRepayment2),
                         totalRepayment2: roundNumber(totalRepayment2),
+                        currentInterest2: roundNumber(monthlyInterest2 * 1200),
                         interestPayment: null,
                         principalRepayment: null,
                         totalRepayment: null,
+                        currentInterest: null,
                     });
                 }
             }
@@ -151,9 +157,11 @@ class ControlForm extends Component {
                     interestPayment2: roundNumber(interestPayment2),
                     principalRepayment2: roundNumber(principalRepayment2),
                     totalRepayment2: roundNumber(totalRepayment2),
+                    currentInterest2: roundNumber(monthlyInterest2 * 1200),
                     interestPayment: null,
                     principalRepayment: null,
                     totalRepayment: null,
+                    currentInterest: null,
                 });
             }
             return {
@@ -191,7 +199,8 @@ class ControlForm extends Component {
                     tenor: tenor,
                     interestPayment: roundNumber(interestPayment),
                     principalRepayment: roundNumber(principalRepayment),
-                    totalRepayment: roundNumber(totalRepayment)
+                    totalRepayment: roundNumber(totalRepayment),
+                    currentInterest: roundNumber(monthInterest * 1200),
                 });
             }
             return {
@@ -213,7 +222,7 @@ class ControlForm extends Component {
                 const loanAmount = values.loanAmount;
                 const loanAmounts = this.props.customerState.loanAmounts;
                 loanAmounts.push(loanAmount);
-                const isMultiple = this.props.resultState.isMultiple;
+                const isMultiple = this.state.isMultiple;
                 const rateType = values.rateType; //1=fixed, 2=float
                 const loanInfo = {
                     loanTenure: loanTenure,
@@ -248,7 +257,7 @@ class ControlForm extends Component {
     };
 
     onAddPlanButtonClick = e => {
-        this.props.setMultiple(!this.props.resultState.isMultiple);
+        this.setState({isMultiple: !this.state.isMultiple});
     };
 
     onRateTypeChange = e => {
@@ -320,9 +329,10 @@ class ControlForm extends Component {
             wrapperCol: {span: 14},
         };
         const {fixedRate, fixedRate2} = this.state;
-        const isMultiple = this.props.resultState.isMultiple;
+        const isMultiple = this.state.isMultiple;
         const plan2Style = isMultiple ? {} : {display: 'none'};
-        const addPlanButtonText = isMultiple ? 'Remove this package' : 'Add a package';
+        const addPlanButtonText = isMultiple ? 'Remove Package 2' : 'Add a Package';
+        const addPlanButtonIcon = isMultiple ? 'minus' : 'plus';
         return (
             <Form {...formItemLayout} onSubmit={this.handleSubmit} className="control-form">
                 <Row>
@@ -535,7 +545,7 @@ class ControlForm extends Component {
 
 
                 <Form.Item wrapperCol={{span: 12, offset: 6}} className="control-form-buttons">
-                    <Button className="add-button" type="primary" icon="plus" onClick={this.onAddPlanButtonClick}>
+                    <Button className="add-button" type="primary" icon={addPlanButtonIcon} onClick={this.onAddPlanButtonClick}>
                         {addPlanButtonText}
                     </Button>
                     <Button className="calc-button" type="primary" icon="calculator" htmlType="submit">

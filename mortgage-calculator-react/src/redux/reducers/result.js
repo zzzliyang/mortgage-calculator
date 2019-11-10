@@ -1,8 +1,7 @@
-import { SET_RESULT, SET_MULTIPLE } from "../actionTypes";
+import { SET_RESULT } from "../actionTypes";
 
 const initialState = {
     result: [],
-    isMultiple: false,
     resultMultiple: false,
     totalAmount1: 0,
     totalInterest1: 0,
@@ -31,12 +30,6 @@ export default function(state = initialState, action) {
                     totalAmount1: action.payload.totalAmount1,
                     totalInterest1: action.payload.totalInterest1
                 };
-        }
-        case SET_MULTIPLE: {
-            return {
-                ...state,
-                isMultiple: action.payload
-            };
         }
         default:
             return state;

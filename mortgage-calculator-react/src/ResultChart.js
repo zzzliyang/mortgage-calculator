@@ -52,6 +52,16 @@ class ResultChart extends React.Component {
                     min: 0,
                     max: maxScale,
                 },
+                currentInterest: {
+                    type: 'linear',
+                    min: 0,
+                    max: maxScale,
+                },
+                currentInterest2: {
+                    type: 'linear',
+                    min: 0,
+                    max: maxScale,
+                },
             } :
             {
                 totalRepayment: {
@@ -60,6 +70,11 @@ class ResultChart extends React.Component {
                     max: maxScale,
                 },
                 value: {
+                    type: 'linear',
+                    min: 0,
+                    max: maxScale,
+                },
+                currentInterest: {
                     type: 'linear',
                     min: 0,
                     max: maxScale,
@@ -81,6 +96,8 @@ class ResultChart extends React.Component {
             <div>
                 <Chart height={400} scale={scale} width={50 * this.props.resultState.result.length} data={dv}>
                     <Legend
+                        clickable={false}
+                        hoverable={false}
                         custom
                         items={legends}
                         position="bottom-left"
@@ -126,6 +143,8 @@ class ResultChart extends React.Component {
                     />
                     <Geom type="line" position="tenor*totalRepayment" color='#fc0618' opacity={0} size={0}/>
                     <Geom type="line" position="tenor*totalRepayment2" color='#fcd500' opacity={0} size={0}/>
+                    <Geom type="line" position="tenor*currentInterest" color='#ffffff' opacity={0} size={0}/>
+                    <Geom type="line" position="tenor*currentInterest2" color='#ffffff' opacity={0} size={0}/>
                 </Chart>
             </div>
         );
