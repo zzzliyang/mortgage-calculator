@@ -486,6 +486,15 @@ class ControlForm extends Component {
                                 </Row>
                             )}
                         </Form.Item>
+
+                        <Form.Item wrapperCol={{span: 12, offset: 6}} className="control-form-buttons">
+                            <Button className="add-button" type="primary" icon={addPlanButtonIcon} onClick={this.onAddPlanButtonClick}>
+                                {addPlanButtonText}
+                            </Button>
+                            <Button className="calc-button" type="primary" icon="calculator" htmlType="submit">
+                                Calculate
+                            </Button>
+                        </Form.Item>
                     </Col>
 
                     <Col span={11} offset={1} style={{ display: 'block' }}>
@@ -599,16 +608,6 @@ class ControlForm extends Component {
 
                     </Col>
                 </Row>
-
-
-                <Form.Item wrapperCol={{span: 12, offset: 6}} className="control-form-buttons">
-                    <Button className="add-button" type="primary" icon={addPlanButtonIcon} onClick={this.onAddPlanButtonClick}>
-                        {addPlanButtonText}
-                    </Button>
-                    <Button className="calc-button" type="primary" icon="calculator" htmlType="submit">
-                        Calculate
-                    </Button>
-                </Form.Item>
 
             </Form>
         );
